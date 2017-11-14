@@ -8,13 +8,25 @@
 #include <errno.h>
 #include <sys/time.h>
 
+
+
+const char *get_filename_ext(const char *filename) {
+    const char *dot = strrchr(filename, '.');
+    if(!dot || dot == filename) return "";
+    return dot + 1;
+}
+
+
 static const char *dirpath = "/home/raldo/Documents";
 
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
-  int res;
+  	int res;
+  	
 	char fpath[1000];
+
 	sprintf(fpath,"%s%s",dirpath,path);
+
 	res = lstat(fpath, stbuf);
 
 	if (res == -1)
@@ -27,6 +39,9 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		       off_t offset, struct fuse_file_info *fi)
 {
   char fpath[1000];
+  	char cb[1000];
+
+
 	if(strcmp(path,"/") == 0)
 	{
 		path=dirpath;
@@ -42,18 +57,20 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	(void) fi;
 
 	dp = opendir(fpath);
-	if (dp == NULL)
-		return -errno;
+	if (dp == NULL) return -errno;
+
 
 	while ((de = readdir(dp)) != NULL) {
 		struct stat st;
 		memset(&st, 0, sizeof(st));
 		st.st_ino = de->d_ino;
 		st.st_mode = de->d_type << 12;
+		sprintf(cb,"notify-send %s", get_filename_ext(de->d_name));
+		system(cb);
+	
 		res = (filler(buf, de->d_name, &st, 0));
 			if(res!=0) break;
 	}
-
 	closedir(dp);
 	return 0;
 }
@@ -61,13 +78,15 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 		    struct fuse_file_info *fi)
 {
-  char fpath[1000];
+  	char fpath[1000];
+
 	if(strcmp(path,"/") == 0)
 	{
 		path=dirpath;
 		sprintf(fpath,"%s",path);
 	}
 	else sprintf(fpath, "%s%s",dirpath,path);
+
 	int res = 0;
   int fd = 0 ;
 
@@ -81,6 +100,7 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 		res = -errno;
 
 	close(fd);
+
 	return res;
 }
 
