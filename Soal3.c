@@ -16,7 +16,8 @@ char check2[1000];
 char loc[200];
 FILE *f1;
 FILE *f2;
-
+FILE *cp1;
+FILE *cp2;
 
 
 static int xmp_getattr(const char *path, struct stat *stbuf)
@@ -127,13 +128,23 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 		res = -errno;
 
 	f2 = fopen (fpath, "r");
-	fgets(check2, 1000, f2);
 
+	fgets(check2, 1000, f2);
+	char ch;
 	if(strcmp(check1,check2)!=0){
+		
 		int hm;
 		system("notify-send terjadi perubahan");
-		hm = mkdir("/home/raldo/Downloads/rahasia",0777)
+		hm = mkdir("/home/raldo/Downloads/simpanan",0777);
+		char oldname[100];
+	    char newname[100];
+	    sprintf(oldname,"/home/raldo/Downloads%s",path);
+		sprintf(newname,"/home/raldo/Downloads/simpanan%s.copy",path);
+		//hm = rename(oldname , newname);
+		cp2 = fopen(newname,"w");
+		fprintf(cp2, "%s", check2);
 	}
+	fclose(cp2);
 	fclose(f2);
 	close(fd);
 
