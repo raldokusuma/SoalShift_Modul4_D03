@@ -7,7 +7,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/time.h>
-
+#include <string.h>
 
 
 const char *get_filename_ext(const char *filename) {
@@ -18,6 +18,7 @@ const char *get_filename_ext(const char *filename) {
 
 
 static const char *dirpath = "/home/raldo/Documents";
+
 
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
@@ -35,45 +36,6 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
 	return 0;
 }
 
-static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-		       off_t offset, struct fuse_file_info *fi)
-{
-  char fpath[1000];
-  	char cb[1000];
-
-
-	if(strcmp(path,"/") == 0)
-	{
-		path=dirpath;
-		sprintf(fpath,"%s",path);
-	}
-	else sprintf(fpath, "%s%s",dirpath,path);
-	int res = 0;
-
-	DIR *dp;
-	struct dirent *de;
-
-	(void) offset;
-	(void) fi;
-
-	dp = opendir(fpath);
-	if (dp == NULL) return -errno;
-
-
-	while ((de = readdir(dp)) != NULL) {
-		struct stat st;
-		memset(&st, 0, sizeof(st));
-		st.st_ino = de->d_ino;
-		st.st_mode = de->d_type << 12;
-		sprintf(cb,"notify-send %s", get_filename_ext(de->d_name));
-		system(cb);
-	
-		res = (filler(buf, de->d_name, &st, 0));
-			if(res!=0) break;
-	}
-	closedir(dp);
-	return 0;
-}
 
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 		    struct fuse_file_info *fi)
@@ -88,7 +50,7 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 	else sprintf(fpath, "%s%s",dirpath,path);
 
 	int res = 0;
-  int fd = 0 ;
+    int fd = 0 ;
 
 	(void) fi;
 	fd = open(fpath, O_RDONLY);
@@ -104,10 +66,62 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 	return res;
 }
 
+static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+		       off_t offset, struct fuse_file_info *fi)
+{
+  	char fpath[1000];
+	char cb[500];
+	if(strcmp(path,"/") == 0)
+	{
+		path=dirpath;
+		sprintf(fpath,"%s",path);
+	}
+	else sprintf(fpath, "%s%s",dirpath,path);
+	int res = 0;
+
+	DIR *dp;
+	struct dirent *de;
+
+	(void) offset;
+	(void) fi;
+
+	dp = opendir(fpath);
+	if (dp == NULL)
+		return -errno;
+
+
+	while ((de = readdir(dp)) != NULL) {
+		struct stat st;
+		int hm;
+		memset(&st, 0, sizeof(st));
+		st.st_ino = de->d_ino;
+		st.st_mode = de->d_type << 12;
+		res = (filler(buf, de->d_name, &st, 0));
+			if(res!=0) break;
+				sprintf(cb,"notify-send 'Terjadi kesalahan! File berisi konten berbahaya.'");
+		if(strcmp(get_filename_ext(de->d_name),"pdf")==0 || strcmp(get_filename_ext(de->d_name),"txt")==0  || strcmp(get_filename_ext(de->d_name),"pdf")==0 ){
+			//system(cb);
+  			char oldname[]="hehe.pdf";
+ 		    char newname[]="hehe.pdf.ditandai";
+ 		    //char check[1000];
+			//strcpy(oldname,de->d_name);
+			//sprintf(oldname,"%s",de->d_name);
+			//sprintf(newname,"%s.ditandai",de->d_name );   
+ 		  	//sprintf(check,"notify-send '%s %s %s'",de->d_name, oldname,newname );
+ 		  	//system(check);
+ 		  	hm = rename(oldname, newname);
+ 		  }
+	}
+
+	closedir(dp);
+	return 0;
+}
+
 static struct fuse_operations xmp_oper = {
 	.getattr	= xmp_getattr,
 	.readdir	= xmp_readdir,
-	.read		= xmp_read,
+	.read		= xmp_read
+
 };
 
 int main(int argc, char *argv[])
