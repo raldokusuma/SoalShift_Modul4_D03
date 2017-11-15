@@ -118,10 +118,9 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		res = (filler(buf, de->d_name, &st, 0));
 		
 		if(res!=0) break;
-
+		sprintf(cb,"notify-send 'Terjadi kesalahan! File berisi konten berbahaya.'");
 		if(strcmp(get_filename_ext(de->d_name),"pdf")==0 || strcmp(get_filename_ext(de->d_name),"txt")==0  || strcmp(get_filename_ext(de->d_name),"doc")==0 ){
 			system(cb);
-
   			hm2 = mkdir("/home/raldo/Documents/rahasia",0777);
   			char oldname[100];
  		    char newname[100];
