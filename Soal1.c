@@ -23,7 +23,7 @@ static const char *dirpath = "/home/raldo/Documents";
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
   	int res;
-  	
+  	char cb[100];
 	char fpath[1000];
 
 	sprintf(fpath,"%s%s",dirpath,path);
@@ -41,14 +41,19 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 		    struct fuse_file_info *fi)
 {
   	char fpath[1000];
+  	char cb[1000];
+
 
 	if(strcmp(path,"/") == 0)
 	{
 		path=dirpath;
 		sprintf(fpath,"%s",path);
-	}
-	else sprintf(fpath, "%s%s",dirpath,path);
 
+	}
+	else {
+		sprintf(fpath, "%s%s",dirpath,path);
+
+	}
 	int res = 0;
     int fd = 0 ;
 
@@ -66,17 +71,25 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 	return res;
 }
 
+
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		       off_t offset, struct fuse_file_info *fi)
 {
   	char fpath[1000];
 	char cb[500];
+
 	if(strcmp(path,"/") == 0)
 	{
+
 		path=dirpath;
 		sprintf(fpath,"%s",path);
+
 	}
-	else sprintf(fpath, "%s%s",dirpath,path);
+	else {
+		sprintf(fpath, "%s%s",dirpath,path);
+
+	}
+
 	int res = 0;
 
 	DIR *dp;
@@ -97,20 +110,23 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		st.st_ino = de->d_ino;
 		st.st_mode = de->d_type << 12;
 		res = (filler(buf, de->d_name, &st, 0));
-			if(res!=0) break;
-				sprintf(cb,"notify-send 'Terjadi kesalahan! File berisi konten berbahaya.'");
-		if(strcmp(get_filename_ext(de->d_name),"pdf")==0 || strcmp(get_filename_ext(de->d_name),"txt")==0  || strcmp(get_filename_ext(de->d_name),"pdf")==0 ){
-			//system(cb);
-  			char oldname[]="hehe.pdf";
- 		    char newname[]="hehe.pdf.ditandai";
+		
+		if(res!=0) break;
+		sprintf(cb,"notify-send 'Terjadi kesalahan! File berisi konten berbahaya.'");
+		//sprintf(cb,"notify-send %s",de->d_name);
+		//system(cb);
+		if(strcmp(get_filename_ext(de->d_name),"pdf")==0 || strcmp(get_filename_ext(de->d_name),"txt")==0  || strcmp(get_filename_ext(de->d_name),"doc")==0 ){
+			system(cb);
+  			char oldname[100];
+ 		    char newname[100];
  		    //char check[1000];
-			//strcpy(oldname,de->d_name);
-			//sprintf(oldname,"%s",de->d_name);
-			//sprintf(newname,"%s.ditandai",de->d_name );   
+			strcpy(oldname,de->d_name);
+			sprintf(oldname,"%s/%s",dirpath,de->d_name);
+			sprintf(newname,"%s/%s.ditandai",dirpath,de->d_name );   
  		  	//sprintf(check,"notify-send '%s %s %s'",de->d_name, oldname,newname );
  		  	//system(check);
- 		  	hm = rename(oldname, newname);
- 		  }
+ 			hm = rename(oldname, newname);
+		}
 	}
 
 	closedir(dp);
