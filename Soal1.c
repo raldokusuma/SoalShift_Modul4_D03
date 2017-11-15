@@ -8,6 +8,8 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <string.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
 
 
 const char *get_filename_ext(const char *filename) {
@@ -77,7 +79,8 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 {
   	char fpath[1000];
 	char cb[500];
-
+	char tmp[100];
+	int hm2, hm3;
 	if(strcmp(path,"/") == 0)
 	{
 
@@ -101,8 +104,9 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	dp = opendir(fpath);
 	if (dp == NULL)
 		return -errno;
-
-
+	FILE *rrah;
+	mode_t modeku;
+	mode = st.st_mode & 00000;
 	while ((de = readdir(dp)) != NULL) {
 		struct stat st;
 		int hm;
@@ -112,20 +116,22 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		res = (filler(buf, de->d_name, &st, 0));
 		
 		if(res!=0) break;
-		sprintf(cb,"notify-send 'Terjadi kesalahan! File berisi konten berbahaya.'");
-		//sprintf(cb,"notify-send %s",de->d_name);
-		//system(cb);
+		sprintf(tmp,"%s/rahasia",dirpath);
 		if(strcmp(get_filename_ext(de->d_name),"pdf")==0 || strcmp(get_filename_ext(de->d_name),"txt")==0  || strcmp(get_filename_ext(de->d_name),"doc")==0 ){
 			system(cb);
+
+  			hm2 = mkdir("/home/raldo/Documents/rahasia",0777);
   			char oldname[100];
  		    char newname[100];
  		    //char check[1000];
 			strcpy(oldname,de->d_name);
 			sprintf(oldname,"%s/%s",dirpath,de->d_name);
-			sprintf(newname,"%s/%s.ditandai",dirpath,de->d_name );   
+			sprintf(newname,"%s/rahasia/%s.ditandai",dirpath,de->d_name );   
  		  	//sprintf(check,"notify-send '%s %s %s'",de->d_name, oldname,newname );
  		  	//system(check);
+ 		  	hm3= chmod("/home/raldo/Documents/rahasia/*",modeku);
  			hm = rename(oldname, newname);
+ 			//fclose(rrah);
 		}
 	}
 
