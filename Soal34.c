@@ -17,7 +17,6 @@ char loc[200];
 FILE *f1;
 FILE *f2;
 FILE *cp2;
-FILE *err;
 char cr[]=".copy";
 char *hsl;
 
@@ -76,14 +75,13 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 		    struct fuse_file_info *fi)
 {
   	char fpath[1000];
-	char cb[200];
-	char teno;
 	
-		//sprintf(teno,"%s",hsl);
-	//system(teno);
 	if(strstr(path,cr) != NULL){
+		
 		system("notify-send 'File yang anda buka adalah file hasil salinan. File tidak bisa diubah maupun disalin kembali!'");
+		return -errno;
 	}
+
 	if(strcmp(path,"/") == 0)
 	{
 		path=dirpath;
@@ -91,15 +89,13 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 	}
 	else sprintf(fpath, "%s%s",dirpath,path);
 	
+	f1 = fopen (fpath, "r");
+	fgets(check1, 1000, f1);	
 
 	int res = 0;
  	int fd = 0 ;
 
 	(void) fi;
-
-	f1 = fopen (fpath, "r");
-	fgets(check1, 1000, f1);
-
 
 
 
@@ -107,15 +103,10 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 	if (fd == -1)
 		return -errno;
 
-
-
-
-
 	res = pread(fd, buf, size, offset);
 	if (res == -1)
 		res = -errno;
 
-	
 	fclose(f1);
 	close(fd);
 	return res;
@@ -153,25 +144,26 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 
 	fgets(check2, 1000, f2);
 	char ch;
-	int hm,ha;
+	int hm,ha,he;
 	if(strcmp(check1,check2)!=0){
-		
-		
-		system("notify-send terjadi perubahan");
+			
+		system("notify-send 'terjadi perubahan'");
 		hm = mkdir("/home/raldo/Downloads/simpanan",0777);
 
 	    sprintf(oldname,"/home/raldo/Downloads%s",path);
 		sprintf(newname,"/home/raldo/Downloads/simpanan%s.copy",path);
-
-		cp2 = fopen(newname,"w");
-		fprintf(cp2, "%s", check2);
 		
+		//while( ( ch = fgetc(f2) ) != EOF ) fputc(ch,cp2);
+		cp2 = fopen(newname,"w+");
+		fprintf(cp2, "%s", check2);
+		fclose(cp2);
+	//	he = chmod(newname,0000);
 	}
 
-	fclose(cp2);
+
 	fclose(f2);
 	close(fd);
-	ha = chmod(newname,0000);
+
 	return res;
 }
 
