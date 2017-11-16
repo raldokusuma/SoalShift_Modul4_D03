@@ -18,7 +18,8 @@ FILE *f1;
 FILE *f2;
 FILE *cp2;
 FILE *err;
-
+char cr[]=".copy";
+char *hsl;
 
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
@@ -74,38 +75,47 @@ char newname[100];
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 		    struct fuse_file_info *fi)
 {
-  char fpath[1000];
+  	char fpath[1000];
 	char cb[200];
+	char teno;
+	
+		//sprintf(teno,"%s",hsl);
+	//system(teno);
+	if(strstr(path,cr) != NULL){
+		system("notify-send 'File yang anda buka adalah file hasil salinan. File tidak bisa diubah maupun disalin kembali!'");
+	}
 	if(strcmp(path,"/") == 0)
 	{
 		path=dirpath;
 		sprintf(fpath,"%s",path);
 	}
 	else sprintf(fpath, "%s%s",dirpath,path);
-	int res = 0;
- 	 int fd = 0 ;
- 	sprintf(cb,"notify-send %s",fpath);
-	system(cb);
- 	sprintf(cb,"notify-send %s",newname);
- 	system(cb);
-	if(strcmp(fpath,newname) == 0){
-		system("notify-send 'File yang anda buka adalah file hasil salinan. File tidak bisa diubah maupun disalin kembali!'' ");
+	
 
-	}
+	int res = 0;
+ 	int fd = 0 ;
+
 	(void) fi;
 
 	f1 = fopen (fpath, "r");
 	fgets(check1, 1000, f1);
 
+
+
+
 	fd = open(fpath, O_RDONLY);
 	if (fd == -1)
 		return -errno;
+
+
+
+
 
 	res = pread(fd, buf, size, offset);
 	if (res == -1)
 		res = -errno;
 
-
+	
 	fclose(f1);
 	close(fd);
 	return res;
@@ -155,13 +165,13 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 
 		cp2 = fopen(newname,"w");
 		fprintf(cp2, "%s", check2);
-		ha = chmod(newname,0000);
+		
 	}
 
 	fclose(cp2);
 	fclose(f2);
 	close(fd);
-
+	ha = chmod(newname,0000);
 	return res;
 }
 
