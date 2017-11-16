@@ -124,18 +124,15 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
   			hm2 = mkdir("/home/raldo/Documents/rahasia",0777);
   			char oldname[100];
  		    char newname[100];
- 		    //char check[1000];
+
 			strcpy(oldname,de->d_name);
 			sprintf(oldname,"%s/%s",dirpath,de->d_name);
 			sprintf(newname,"%s/rahasia/%s.ditandai",dirpath,de->d_name );   
- 		  	//sprintf(check,"notify-send '%s %s %s'",de->d_name, oldname,newname );
- 		  	//system(check);
  		  	
  			
  			hm = rename(oldname, newname);
  			hm3 = chmod(newname,0000);
- 			//hm3= open(newname, O_RDWR|O_CREAT, 0000);
- 			//fclose(rrah);
+
 		}
 	}
 
