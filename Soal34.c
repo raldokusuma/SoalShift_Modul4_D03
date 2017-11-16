@@ -11,8 +11,8 @@
 #include <sys/types.h>
 
 static const char *dirpath = "/home/raldo/Downloads";
-char check1[1000];
-char check2[1000];
+char check1[500];
+char check2[500];
 char loc[200];
 FILE *f1;
 FILE *f2;
@@ -36,7 +36,9 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		       off_t offset, struct fuse_file_info *fi)
 {
+	char nama[500];
   char fpath[1000];
+  int jj;
 	if(strcmp(path,"/") == 0)
 	{
 		path=dirpath;
@@ -76,8 +78,7 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 {
   	char fpath[1000];
 	
-	if(strstr(path,cr) != NULL){
-		
+	if(strstr(path,cr) != NULL){	
 		system("notify-send 'File yang anda buka adalah file hasil salinan. File tidak bisa diubah maupun disalin kembali!'");
 		return -errno;
 	}
@@ -90,7 +91,7 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 	else sprintf(fpath, "%s%s",dirpath,path);
 	
 	f1 = fopen (fpath, "r");
-	fgets(check1, 1000, f1);	
+	fgets(check1, 500, f1);	
 
 	int res = 0;
  	int fd = 0 ;
@@ -117,6 +118,7 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 {
 	char fpath[1000];
 	char cb[200];
+
 	if(strcmp(path,"/") == 0)
 	{
 		path=dirpath;
@@ -136,16 +138,20 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 	if (fd == -1)
 		return -errno;
 
+	if(strstr(path,cr) != NULL){
+		return -errno;
+	}
+
 	res = pwrite(fd, buf, size, offset);
 	if (res == -1)
 		res = -errno;
 
+
 	f2 = fopen (fpath, "r");
 
-	fgets(check2, 1000, f2);
-	char ch;
+	fgets(check2, 500, f2);
 	int hm,ha,he;
-	if(strcmp(check1,check2)!=0){
+	if(strcmp(check1,check2)!=0 && strstr(path,cr) == NULL){
 			
 		system("notify-send 'terjadi perubahan'");
 		hm = mkdir("/home/raldo/Downloads/simpanan",0777);
@@ -153,11 +159,10 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 	    sprintf(oldname,"/home/raldo/Downloads%s",path);
 		sprintf(newname,"/home/raldo/Downloads/simpanan%s.copy",path);
 		
-		//while( ( ch = fgetc(f2) ) != EOF ) fputc(ch,cp2);
 		cp2 = fopen(newname,"w+");
 		fprintf(cp2, "%s", check2);
 		fclose(cp2);
-	//	he = chmod(newname,0000);
+		chmod(newname,0000);
 	}
 
 
